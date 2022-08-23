@@ -21,10 +21,7 @@ st.set_page_config(layout='wide')
 """)
 
 st.write('El siguiente paso es armar una función genérica que nos permita interactuar con la API del BCRA.')
-st.code("""# Defino una función que me traiga los datos directamente desde la API del BCRA
-def get_bcra_info(url):
-    # Para conseguir un token, registrate con tu mail en https://estadisticasbcra.com/api/registracion
-    token = 'eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTI3NTY1ODgsInR5cGUiOiJleHRlcm5hbCIsInVzZXIiOiJ0b21hc2dhdWRpbm9AaG90bWFpbC5jb20ifQ.6cUrAP-udYDEEVvYshJCDgv3NRDr5jJOr8WEV6pmanLPpFAbARZK4vLGZTVvLXbCWxdFfl4AFl5TlPl6CyIl0g'
+st.code("""def get_bcra_info(token, url):
     headers = {'Authorization': f'BEARER {token}'}
     # Realizamos consulta vía API al BCRA
     response = requests.get(url, headers=headers).json()
@@ -35,25 +32,33 @@ def get_bcra_info(url):
 st.write('Es importante que nuestro dashboard tenga un título y una breve descripción para orientar a la audiencia. Para esto utilizamos las funciones st.title, st.subheader y st.info')
 st.code("""# Agregamos un título y un subheader a la página
 st.title('¿Inflación vs. USD?')
-st.subheader("El siguiente gráfico muestra la inflación interanual, el valor del dólar oficial y del dólar blue en función del tiempo para Argentina desde el año 1995.")
+st.write("El siguiente gráfico muestra la inflación interanual, el valor del dólar oficial y del dólar blue en función del tiempo para Argentina desde el año 1995.")
 st.info('Todos los datos fueron extraídos de https://estadisticasbcra.com/api/documentacion')
 """)
 
+st.write('Como los datos dependen de la API del BCRA y el mismo exige un token, para no difundir el mío los invito a que generen su propio token y obtengan la información ustedes mismos.')
+st.code("""# Agrego una entrada de texto para ingresar el token generado y lo almaceno en una variable
+token = st.text_input('Token de BCRA')
+# Ayuda complementaria al usuario
+st.info('Para conseguir un token, registrate con tu mail en https://estadisticasbcra.com/api/registracion')
+# Una vez ingresado el token, el usuario debe presionar este botón
+calculate = st.button('Empezar')""")
+
 st.write('Ahora viene la parte interesante. Vamos a generar tres tablas a partir de la API del BCRA: inflación interanual argentina, cotización del dólar oficial y cotización del dólar blue. Se aplican dos transformaciones muy básicas, 1) se renombran las columnas para mejorar la legibilidad, y 2) se filtra para un período posterior a 1995.')
 st.code("""# Inflación interanual argentina
-yearly_inflation = get_bcra_info('https://api.estadisticasbcra.com/inflacion_interanual_oficial')
-yearly_inflation = yearly_inflation.rename(columns={'d': 'Período', 'v': 'Inflación interanual oficial'})
-yearly_inflation = yearly_inflation[yearly_inflation['Período'] >= '1995-01-01']
+    yearly_inflation = get_bcra_info(token, 'https://api.estadisticasbcra.com/inflacion_interanual_oficial')
+    yearly_inflation = yearly_inflation.rename(columns={'d': 'Período', 'v': 'Inflación interanual oficial'})
+    yearly_inflation = yearly_inflation[yearly_inflation['Período'] >= '1995-01-01']
 
-# Cotización de dólar blue en función del tiempo
-usd_value = get_bcra_info('https://api.estadisticasbcra.com/usd')
-usd_value = usd_value.rename(columns={'d': 'Período', 'v': 'USD(t)'})
-usd_value = usd_value[usd_value['Período'] >= '1995-01-01']
+    # Cotización de dólar blue en función del tiempo
+    usd_value = get_bcra_info(token, 'https://api.estadisticasbcra.com/usd')
+    usd_value = usd_value.rename(columns={'d': 'Período', 'v': 'USD(t)'})
+    usd_value = usd_value[usd_value['Período'] >= '1995-01-01']
 
-# Cotización de dólar oficial en función del tiempo
-usd_of_value = get_bcra_info('https://api.estadisticasbcra.com/usd_of')
-usd_of_value = usd_of_value.rename(columns={'d': 'Período', 'v': 'USD Oficial(t)'})
-usd_of_value = usd_of_value[usd_of_value['Período'] >= '1995-01-01']
+    # Cotización de dólar oficial en función del tiempo
+    usd_of_value = get_bcra_info(token, 'https://api.estadisticasbcra.com/usd_of')
+    usd_of_value = usd_of_value.rename(columns={'d': 'Período', 'v': 'USD Oficial(t)'})
+    usd_of_value = usd_of_value[usd_of_value['Período'] >= '1995-01-01']
 """)
 
 st.write('Vamos a graficar. En primer lugar, instanciamos una figura de plotly. Existen varios métodos, el que se muestra a continuación es make_subplots, una clase que nos permite ubicar un eje Y a la izquierda y a la derecha.')
@@ -116,7 +121,6 @@ st.write("""¡No! Hubo muchísimas cosas que no pudimos ver por cuestiones de ti
     - Date pickers
     - Dropdowns
     - Radios
-- Botones
 - Drag and drop
 - Embedding
 - Logins""")
