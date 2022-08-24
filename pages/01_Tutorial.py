@@ -45,7 +45,8 @@ st.info('Para conseguir un token, registrate con tu mail en https://estadisticas
 calculate = st.button('Empezar')""")
 
 st.write('Ahora viene la parte interesante. Vamos a generar tres tablas a partir de la API del BCRA: inflación interanual argentina, cotización del dólar oficial y cotización del dólar blue. Se aplican dos transformaciones muy básicas, 1) se renombran las columnas para mejorar la legibilidad, y 2) se filtra para un período posterior a 1995.')
-st.code("""# Inflación interanual argentina
+st.code("""if calculate:
+    # Inflación interanual argentina
     yearly_inflation = get_bcra_info(token, 'https://api.estadisticasbcra.com/inflacion_interanual_oficial')
     yearly_inflation = yearly_inflation.rename(columns={'d': 'Período', 'v': 'Inflación interanual oficial'})
     yearly_inflation = yearly_inflation[yearly_inflation['Período'] >= '1995-01-01']
